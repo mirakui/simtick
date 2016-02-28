@@ -8,7 +8,7 @@ module Simtick
     def initialize(sequencer)
       super
       @sequencer = sequencer
-      @timeline = sequencer.make_timeline
+      @track = sequencer.make_track
       @workers = []
       record :created
     end
@@ -18,21 +18,21 @@ module Simtick
     end
 
     def request(payload)
-      @timeline.add_interval(1)
-      @timeline.add_action do |age|
+      @track.add_interval(1)
+      @track.add_action do |age|
         record :envoke_payload, payload: payload.to_s
         age < 10
         #false
       end
-      #@timeline.add_action do |age|
+      #@track.add_action do |age|
       #  worker = @workers.sample
       #  worker.request payload
       #end
-      @timeline.add_interval(1)
+      @track.add_interval(1)
     end
 
     def record(event, tags={})
-      tags = { timeline: @timeline.name }.merge tags
+      tags = { track: @track.name }.merge tags
       super event, tags
     end
   end

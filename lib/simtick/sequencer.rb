@@ -1,24 +1,24 @@
-require 'simtick/timeline'
+require 'simtick/track'
 
 module Simtick
   class Sequencer
     attr_reader :ticker
 
     def initialize
-      @timelines = []
+      @tracks = []
       @ticker = 0
       @id_counters = Hash.new {|h, k| h[k] = 0 }
     end
 
-    def make_timeline
-      Timeline.new(self).tap do |timeline|
-        @timelines << timeline
+    def make_track
+      Track.new(self).tap do |track|
+        @tracks << track
       end
     end
 
     def tick!
-      @timelines.each do |timeline|
-        timeline.on_tick
+      @tracks.each do |track|
+        track.on_tick
       end
       @ticker += 1
     end

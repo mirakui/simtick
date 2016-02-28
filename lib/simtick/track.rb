@@ -2,7 +2,7 @@ require 'simtick/action'
 require 'simtick/loggable'
 
 module Simtick
-  class Timeline
+  class Track
     include Loggable
 
     def initialize(sequencer)
