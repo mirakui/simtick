@@ -8,18 +8,20 @@ module Simtick
     end
 
     def add_action(&block)
-      @actions << Action.new(&block)
-    end
-
-    def add_interval(duration)
-      action = Action.new do |age|
-        puts "waiting duration: #{age} / #{duration}"
-        age < duration
-      end
+      action = Action.new(&block)
+      puts "action registered: #{action}"
       @actions << action
     end
 
+    def add_interval(duration)
+      add_action do |age|
+        puts "waiting duration: #{age} / #{duration}"
+        age < duration
+      end
+    end
+
     def on_tick
+      puts "remaining actions: #{@actions.length}"
       if action = @actions.first
         action.on_tick
         unless action.running?
