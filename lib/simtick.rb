@@ -1,5 +1,10 @@
-require "simtick/version"
+require 'simtick/version'
+require 'simtick/logger'
 
 module Simtick
-  # Your code goes here...
+
+  module_function
+  def logger
+    @logger ||= Simtick::Logger.new
+  end
 end

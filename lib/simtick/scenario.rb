@@ -10,17 +10,18 @@ module Simtick
 
     def start
       sequencer = Sequencer.new
+      timeline = sequencer.make_timeline
+
       proxy = Proxy.new(sequencer)
       proxy.add_worker(Worker.new(sequencer))
 
       payload = Payload.new path: '/foo'
 
-      timeline = sequencer.make_timeline
-      timeline.add_action { proxy.request payload; false }
+      timeline.add_event { proxy.request payload }
       timeline.add_interval(100)
-      timeline.add_action { proxy.request payload; false }
+      timeline.add_event { proxy.request payload }
       timeline.add_interval(100)
-      timeline.add_action { proxy.request payload; false }
+      timeline.add_event { proxy.request payload }
       timeline.add_interval(100)
 
       sequencer.start

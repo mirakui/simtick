@@ -7,6 +7,7 @@ module Simtick
     def initialize
       @timelines = []
       @ticker = 0
+      @id_counters = Hash.new {|h, k| h[k] = 0 }
     end
 
     def make_timeline
@@ -23,10 +24,13 @@ module Simtick
     end
 
     def start
-      while @ticker <= 100
-        puts "ticker: #{@ticker}"
+      while @ticker <= 1000
         tick!
       end
+    end
+
+    def make_id(cls)
+      @id_counters[cls] += 1
     end
   end
 end
