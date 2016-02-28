@@ -3,4 +3,4 @@
 $: << File.expand_path('../lib', __dir__)
 require 'simtick/scenario'
 
-Simtick::Scenario.new.start
+Simtick::Scenario.new.play

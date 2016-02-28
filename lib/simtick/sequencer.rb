@@ -23,7 +23,7 @@ module Simtick
       @ticker += 1
     end
 
-    def start
+    def play
       while @ticker <= 1000
         tick!
       end

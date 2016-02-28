@@ -1,15 +1,18 @@
 require 'simtick/proxy'
-require 'simtick/user'
 require 'simtick/worker'
 require 'simtick/sequencer'
+require 'simtick/payload'
 
 module Simtick
   class Scenario
     def initialize
     end
 
-    def start
+    def play
       sequencer = Sequencer.new
+
+      #sequencer.add_track Instrument::Visitor, name: 'visitor1'
+
       track = sequencer.make_track
 
       proxy = Proxy.new(sequencer)
@@ -24,7 +27,7 @@ module Simtick
       track.add_event { proxy.request payload }
       track.add_interval(100)
 
-      sequencer.start
+      sequencer.play
     end
   end
 end
