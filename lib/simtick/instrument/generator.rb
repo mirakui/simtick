@@ -3,10 +3,9 @@ require 'simtick/instrument'
 module Simtick
   module Instrument
     class Generator < Base
-      def initialize(out:, req_per_tick:, tick_resolution: 1000)
+      def initialize(out:, req_per_tick:)
         @out = out
         @req_per_tick = req_per_tick
-        @tick_resolution = tick_resolution.to_i
         @dda_fiber = dda @req_per_tick
       end
 
@@ -25,8 +24,9 @@ module Simtick
           callback = Fiber.new do
             t_start = sequencer.ticker
             resp = Fiber.yield
-            t = sequencer.ticker - t_start
-            puts "#{t_start}, resp:#{resp}, time:#{t}"
+            t_end = sequencer.ticker
+            t =  t_end - t_start
+            puts "#{t_end}, resp:#{resp}, time:#{t}"
           end
           callback.resume
           @out.request payload, callback

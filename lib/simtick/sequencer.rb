@@ -28,6 +28,10 @@ module Simtick
       end
     end
 
+    def wait(interval)
+      # WaitTimer で interval 回数だけ Fiber.yield
+    end
+
     def make_id(cls)
       @id_counters[cls] += 1
     end
