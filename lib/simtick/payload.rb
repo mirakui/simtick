@@ -1,9 +1,9 @@
 module Simtick
   class Payload
-    attr_reader :env
+    attr_accessor :url, :request_id
 
-    def initialize(env)
-      @env = env
+    def initialize(url:)
+      @url = url
     end
   end
 end

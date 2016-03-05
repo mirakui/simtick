@@ -7,6 +7,7 @@ module Simtick
         @out = out
         @req_per_tick = req_per_tick
         @dda_fiber = dda @req_per_tick
+        @last_id = 0
       end
 
       def on_tick(ticker)
@@ -16,21 +17,16 @@ module Simtick
       end
 
       def generate
-        case @out
-        when Array
-          raise 'not implemented yet'
-        else
-          payload = { url: '/' }
-          callback = Fiber.new do
-            t_start = sequencer.ticker
-            resp = Fiber.yield
-            t_end = sequencer.ticker
-            t =  t_end - t_start
-            puts "#{t_end}, resp:#{resp}, time:#{t}"
-          end
-          callback.resume
-          @out.request payload, callback
-        end
+        @last_id += 1
+        payload = { url: '/', request_id: @last_id }
+        t_start = sequencer.ticker
+        puts "started: #{t_start}, payload:#{payload}"
+        callback = -> resp {
+          t_end = sequencer.ticker
+          t =  t_end - t_start
+          puts "#{t_end}, resp:#{resp}, time:#{t}"
+        }
+        @out.request payload, &callback
       end
 
       # Bresenham's line algorithm
