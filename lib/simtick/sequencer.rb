@@ -10,15 +10,14 @@ module Simtick
       @id_counters = Hash.new {|h, k| h[k] = 0 }
     end
 
-    def make_track
-      Track.new(self).tap do |track|
-        @tracks << track
-      end
+    def add_track(inst)
+      inst.sequencer = self
+      @tracks << inst
     end
 
     def tick!
       @tracks.each do |track|
-        track.on_tick
+        track.on_tick @ticker
       end
       @ticker += 1
     end

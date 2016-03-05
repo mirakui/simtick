@@ -1,10 +1,9 @@
 module Simtick
   module Instrument
     class Base
-      attr_reader :track
+      attr_accessor :sequencer
 
-      def initialize(track)
-        @track = track
+      def on_tick(ticker)
       end
     end
   end

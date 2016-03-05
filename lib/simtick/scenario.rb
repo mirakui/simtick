@@ -1,7 +1,6 @@
-require 'simtick/proxy'
-require 'simtick/worker'
 require 'simtick/sequencer'
-require 'simtick/payload'
+require 'simtick/instrument/worker'
+require 'simtick/instrument/generator'
 
 module Simtick
   class Scenario
@@ -11,21 +10,11 @@ module Simtick
     def play
       sequencer = Sequencer.new
 
-      #sequencer.add_track Instrument::Visitor, name: 'visitor1'
+      worker = Instrument::Worker.new
+      sequencer.add_track worker
 
-      track = sequencer.make_track
-
-      proxy = Proxy.new(sequencer)
-      proxy.add_worker(Worker.new(sequencer))
-
-      payload = Payload.new path: '/foo'
-
-      track.add_event { proxy.request payload }
-      track.add_interval(100)
-      track.add_event { proxy.request payload }
-      track.add_interval(100)
-      track.add_event { proxy.request payload }
-      track.add_interval(100)
+      gen = Instrument::Generator.new(out: worker, req_per_tick: 0.01)
+      sequencer.add_track gen
 
       sequencer.play
     end
