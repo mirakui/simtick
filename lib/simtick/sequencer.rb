@@ -1,5 +1,3 @@
-require 'simtick/track'
-
 module Simtick
   class Sequencer
     attr_reader :ticker
