@@ -16,6 +16,7 @@ module Simtick
     end
 
     def tick!
+      #puts "ticker: #{@ticker}"
       @tracks.each do |track|
         track.on_tick @ticker
       end
@@ -26,10 +27,6 @@ module Simtick
       while @ticker <= 1000
         tick!
       end
-    end
-
-    def wait(interval)
-      # WaitTimer で interval 回数だけ Fiber.yield
     end
 
     def make_id(cls)

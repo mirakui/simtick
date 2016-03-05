@@ -5,6 +5,7 @@ module Simtick
     class Worker < Base
       def initialize
         @current_payload = nil
+        @current_wait = nil
       end
 
       def request(payload, callback)
@@ -12,10 +13,28 @@ module Simtick
           callback.resume( status: 503, body: 'worker is busy' )
         else
           @current_payload = payload
-          sequencer.wait 50
-          callback.resume( status: 200, body: 'it works' )
-          @current_payload = nil
+          wait(200) do
+            callback.resume( status: 200, body: 'it works' )
+            @current_payload = nil
+          end
         end
+      end
+
+      def on_tick(ticker)
+        if @current_wait
+          if @wait_progress >= @current_wait
+            @wait_callback.call
+            @current_wait = nil
+          else
+            @wait_progress += 1
+          end
+        end
+      end
+
+      def wait(interval, &block)
+        @current_wait = interval
+        @wait_progress = 1
+        @wait_callback = block
       end
     end
   end
