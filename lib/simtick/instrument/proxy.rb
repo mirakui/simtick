@@ -1,10 +1,12 @@
 module Simtick
   module Instrument
     class Proxy < Base
-      def initialize(backlog: 0)
+      def initialize(backlog: 0, timeout: nil)
         @workers = []
         @backlog_max = backlog
         @backlog = []
+        @timeoutable_tasks = []
+        @timeout = timeout
       end
 
       def add_worker(worker)
@@ -12,6 +14,7 @@ module Simtick
       end
 
       def on_tick(ticker)
+        check_timeoutable_tasks ticker
         while !@backlog.empty? && (worker = next_worker)
           task = @backlog.shift
           worker.request(task[:payload]) do |resp|
@@ -20,27 +23,49 @@ module Simtick
         end
       end
 
+      def check_timeoutable_tasks(ticker)
+        timedout_tasks = @timeoutable_tasks.select do |task|
+          task[:timeout_at] && task[:timeout_at] <= ticker
+        end
+        timedout_tasks.each do |task|
+          task[:on_timeout].call
+          @timeoutable_tasks.delete task
+        end
+      end
+
       def request(payload, &callback)
+        task = { payload: payload, callback: callback }
+        if @timeout
+          task[:timeout_at] = sequencer.ticker + @timeout
+          task[:on_timeout] = -> {
+            callback.call payload: payload, status: 504, body: 'proxy timed out'
+          }
+          @timeoutable_tasks << task
+        end
+
         if @backlog.empty?
           worker = next_worker
           if worker
-            worker.request payload, &callback
+            worker.request(payload) do |resp|
+              finish_task task, resp
+            end
             return
           end
         end
 
         if @backlog.length < @backlog_max
-          task = { payload: payload, callback: callback }
           task[:on_finish] = -> resp {
-            callback.call resp.merge(payload: payload)
-          }
-          task[:on_timeout] = -> resp {
-            callback.call payload: payload, status: 504, body: 'proxy timed out'
+            finish_task task, resp.merge(payload: payload)
           }
           @backlog << task
         else
-          callback.call payload: payload, status: 503, body: 'proxy backlog limit exceeded'
+          finish_task task, payload: payload, status: 503, body: 'proxy backlog limit exceeded'
         end
+      end
+
+      def finish_task(task, response)
+        @timeoutable_tasks.delete task
+        task[:callback].call response
       end
 
       def next_worker

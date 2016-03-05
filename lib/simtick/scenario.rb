@@ -11,16 +11,16 @@ module Simtick
     def play
       sequencer = Sequencer.new
 
-      proxy = Instrument::Proxy.new backlog: 1
+      proxy = Instrument::Proxy.new backlog: 1000, timeout: 100
       sequencer.add_track proxy
 
-      workers = 3.times do |i|
+      workers = 1.times do |i|
         worker = Instrument::Worker.new
         sequencer.add_track worker
         proxy.add_worker worker
       end
 
-      gen = Instrument::Generator.new(out: proxy, req_per_tick: 0.03)
+      gen = Instrument::Generator.new(out: proxy, req_per_tick: 0.02)
       sequencer.add_track gen
 
       sequencer.play
