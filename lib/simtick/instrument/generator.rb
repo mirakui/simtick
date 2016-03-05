@@ -1,3 +1,4 @@
+require 'simtick'
 require 'simtick/instrument'
 
 module Simtick
@@ -23,11 +24,17 @@ module Simtick
         @last_id += 1
         payload = { url: '/', request_id: @last_id }
         t_start = sequencer.ticker
-        puts "started: #{t_start}, payload:#{payload}"
         callback = -> resp {
           t_end = sequencer.ticker
           t =  t_end - t_start
-          puts "#{t_end}, resp:#{resp}, time:#{t}"
+          Simtick.logger.record(
+            ticker: t_end,
+            url: resp[:payload][:url],
+            status: resp[:status],
+            body: resp[:body],
+            reqid: resp[:payload][:request_id],
+            reqtime: t,
+          )
         }
         @out.request payload, &callback
       end
