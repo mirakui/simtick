@@ -3,6 +3,8 @@ require 'simtick/instrument'
 module Simtick
   module Instrument
     class Generator < Base
+      DDA_RESOLUTION = 1000
+
       def initialize(out:, req_per_tick:)
         @out = out
         @req_per_tick = req_per_tick
@@ -11,8 +13,9 @@ module Simtick
       end
 
       def on_tick(ticker)
-        if @dda_fiber.resume
-          generate
+        n = @dda_fiber.resume
+        if n && n > 0
+          n.times { generate }
         end
       end
 
@@ -32,14 +35,23 @@ module Simtick
       # Bresenham's line algorithm
       def dda(rpt)
         Fiber.new do
-          err = 0
+          dx = DDA_RESOLUTION
+          dy = rpt * DDA_RESOLUTION
+
+          ycount = 0
+          err = dx - dy
           loop do
-            err += rpt
-            if err >= 0.5
-              Fiber.yield true
-              err -= 1.0
+            e2 = err * 2
+            if e2 > -dy
+              err -= dy
+              Fiber.yield ycount
+              ycount = 0
             else
-              Fiber.yield false
+              Fiber.yield 0
+            end
+            if e2 < dx
+              err += dx
+              ycount += 1
             end
           end
         end
