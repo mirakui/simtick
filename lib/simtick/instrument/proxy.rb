@@ -38,7 +38,7 @@ module Simtick
         if @timeout
           task[:timeout_at] = sequencer.ticker + @timeout
           task[:on_timeout] = -> {
-            callback.call payload: payload, status: 504, body: 'proxy timed out'
+            callback.call payload.set(status: 504, body: 'proxy timed out')
           }
           @timeoutable_tasks << task
         end
@@ -55,11 +55,11 @@ module Simtick
 
         if @backlog.length < @backlog_max
           task[:on_finish] = -> resp {
-            finish_task task, resp.merge(payload: payload)
+            finish_task task, resp
           }
           @backlog << task
         else
-          finish_task task, payload: payload, status: 503, body: 'proxy backlog limit exceeded'
+          finish_task task, payload.set(status: 503, body: 'proxy backlog limit exceeded')
         end
       end
 

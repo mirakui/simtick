@@ -1,4 +1,5 @@
 require 'simtick'
+require 'simtick/payload'
 require 'simtick/instrument'
 
 module Simtick
@@ -10,7 +11,6 @@ module Simtick
         @out = out
         @req_per_tick = req_per_tick
         @dda_fiber = dda @req_per_tick
-        @last_id = 0
       end
 
       def on_tick(ticker)
@@ -21,19 +21,18 @@ module Simtick
       end
 
       def generate
-        @last_id += 1
-        payload = { url: '/', request_id: @last_id }
+        payload = Payload.new url: '/'
         t_start = sequencer.ticker
         callback = -> resp {
           t_end = sequencer.ticker
           t =  t_end - t_start
           Simtick.logger.record(
             ticker: t_end,
-            url: resp[:payload][:url],
-            status: resp[:status],
-            body: resp[:body],
-            reqid: resp[:payload][:request_id],
+            url: payload.url,
+            status: payload.status,
+            reqid: payload.request_id,
             reqtime: t,
+            body: payload.body,
           )
         }
         @out.request payload, &callback

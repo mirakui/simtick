@@ -12,11 +12,11 @@ module Simtick
 
       def request(payload, &callback)
         if busy?
-          callback.call payload: payload, status: 503, body: 'worker is busy'
+          callback.call payload.set(status: 503, body: 'worker is busy')
         else
           @current_payload = payload
-          wait(200) do
-            callback.call payload: payload, status: 200, body: 'it works'
+          wait(100) do
+            callback.call payload.set(status: 200, body: 'it works')
             @current_payload = nil
           end
         end
