@@ -1,11 +1,13 @@
 require 'simtick/instrument'
+require 'simtick/instrument/waitable'
 
 module Simtick
   module Instrument
     class Worker < Base
+      include Waitable
+
       def initialize
         @current_payload = nil
-        @current_wait = nil
       end
 
       def request(payload, callback)
@@ -18,23 +20,6 @@ module Simtick
             @current_payload = nil
           end
         end
-      end
-
-      def on_tick(ticker)
-        if @current_wait
-          if @wait_progress >= @current_wait
-            @wait_callback.call
-            @current_wait = nil
-          else
-            @wait_progress += 1
-          end
-        end
-      end
-
-      def wait(interval, &block)
-        @current_wait = interval
-        @wait_progress = 1
-        @wait_callback = block
       end
     end
   end
