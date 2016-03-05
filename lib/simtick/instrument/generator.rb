@@ -21,14 +21,14 @@ module Simtick
       end
 
       def generate
-        payload = Payload.new url: '/'
+        payload = Payload.new uri: '/'
         t_start = sequencer.ticker
         callback = -> resp {
           t_end = sequencer.ticker
           t =  t_end - t_start
           Simtick.logger.record(
             ticker: t_end,
-            url: payload.url,
+            uri: payload.uri,
             status: payload.status,
             reqid: payload.request_id,
             reqtime: t,

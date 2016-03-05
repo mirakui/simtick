@@ -1,15 +1,15 @@
 module Simtick
   class Payload
     attr_reader :request_id
-    attr_accessor :url, :body, :status
+    attr_accessor :uri, :body, :status
 
-    def initialize(url:'/')
-      @url = url
+    def initialize(uri:'/')
+      @uri = uri
       @request_id = self.class.make_request_id
     end
 
-    def set(url:nil, body:nil, status:nil)
-      @url = url if url
+    def set(uri:nil, body:nil, status:nil)
+      @uri = uri if uri
       @body = body if body
       @status = status if status
       self
