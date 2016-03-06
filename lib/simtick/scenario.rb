@@ -11,7 +11,7 @@ module Simtick
     def play
       sequencer = Sequencer.new
 
-      proxy = Instrument::Proxy.new backlog: 1000, timeout: 100
+      proxy = Instrument::Proxy.new backlog: 1000, timeout: 205
       sequencer.add_track proxy
 
       workers = 1.times do |i|

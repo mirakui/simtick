@@ -21,6 +21,12 @@ module Simtick
         @wait_progress = 1
         @wait_callback = block
       end
+
+      def cancel
+        @current_wait = nil
+        @wait_progress = nil
+        @wait_callback = nil
+      end
     end
   end
 end

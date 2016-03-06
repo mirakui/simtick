@@ -17,6 +17,7 @@ module Simtick
         check_timeoutable_tasks ticker
         while !@backlog.empty? && (worker = next_worker)
           task = @backlog.shift
+          task[:worker] = worker
           worker.request(task[:payload]) do |resp|
             task[:on_finish].call resp
           end
@@ -30,6 +31,7 @@ module Simtick
         timedout_tasks.each do |task|
           task[:on_timeout].call
           @timeoutable_tasks.delete task
+          @backlog.delete task
         end
       end
 
@@ -38,6 +40,7 @@ module Simtick
         if @timeout
           task[:timeout_at] = sequencer.ticker + @timeout
           task[:on_timeout] = -> {
+            task[:worker].cancel if task[:worker]
             callback.call payload.set(status: 504, body: 'proxy timed out')
           }
           @timeoutable_tasks << task
@@ -46,6 +49,7 @@ module Simtick
         if @backlog.empty?
           worker = next_worker
           if worker
+            task[:worker] = worker
             worker.request(payload) do |resp|
               finish_task task, resp
             end
