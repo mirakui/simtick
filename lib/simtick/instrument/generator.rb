@@ -34,6 +34,11 @@ module Simtick
             reqtime: t,
             body: payload.body,
           )
+          sequencer.result.record(
+            ticker: t_end,
+            status: payload.status,
+            reqtime: t,
+          )
         }
         @out.request payload, &callback
       end

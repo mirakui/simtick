@@ -1,11 +1,14 @@
+require 'simtick/result'
+
 module Simtick
   class Sequencer
-    attr_reader :ticker
+    attr_reader :ticker, :result
 
     def initialize
       @tracks = []
       @ticker = 0
       @id_counters = Hash.new {|h, k| h[k] = 0 }
+      @result = Result.new
     end
 
     def add_track(inst)

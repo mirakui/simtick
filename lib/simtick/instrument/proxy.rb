@@ -1,3 +1,5 @@
+require 'simtick/instrument'
+
 module Simtick
   module Instrument
     class Proxy < Base
