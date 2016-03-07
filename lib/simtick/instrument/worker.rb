@@ -6,8 +6,10 @@ module Simtick
     class Worker < Base
       include Waitable
 
-      def initialize
+      def initialize(&block)
         @current_payload = nil
+        raise ArgumentError, 'Worker.new must have a block' unless block
+        @response_proc = block
       end
 
       def request(payload, &callback)
@@ -15,8 +17,12 @@ module Simtick
           callback.call payload.set(status: 503, body: 'worker is busy')
         else
           @current_payload = payload
-          wait(100) do
-            callback.call payload.set(status: 200, body: 'it works')
+          resp = @response_proc.call(payload)
+          duration = resp[:duration] || 0
+          status = resp[:status] || 200
+          body = resp[:body] || 'it works'
+          wait(duration) do
+            callback.call payload.set(status: status, body: body)
             @current_payload = nil
           end
         end

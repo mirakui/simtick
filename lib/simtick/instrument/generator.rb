@@ -7,10 +7,11 @@ module Simtick
     class Generator < Base
       DDA_RESOLUTION = 1000
 
-      def initialize(out:, req_per_tick:)
+      def initialize(out:, req_per_tick:, &block)
         @out = out
         @req_per_tick = req_per_tick
         @dda_fiber = dda @req_per_tick
+        @payload_proc = block || lambda {|t| { uri: '/' } }
       end
 
       def on_tick(ticker)
@@ -21,7 +22,7 @@ module Simtick
       end
 
       def generate
-        payload = Payload.new uri: '/'
+        payload = Payload.new @payload_proc.call(sequencer.ticker)
         t_start = sequencer.ticker
         callback = -> resp {
           t_end = sequencer.ticker

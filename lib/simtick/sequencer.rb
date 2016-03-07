@@ -17,15 +17,14 @@ module Simtick
     end
 
     def tick!
-      #puts "ticker: #{@ticker}"
       @tracks.each do |track|
         track.on_tick @ticker
       end
       @ticker += 1
     end
 
-    def play
-      while @ticker <= 1000
+    def play(max_ticker: 1000)
+      while @ticker <= max_ticker
         tick!
       end
     end
