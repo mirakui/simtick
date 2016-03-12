@@ -51,11 +51,8 @@ module Simtick
     end
 
     def summarize
-      total_requests = @db.get_first_value(
-        'SELECT COUNT(1) FROM `payloads`'
-      )
-      avg_reqtime = @db.get_first_value(
-        'SELECT AVG(`reqtime`) FROM `payloads`'
+      total_requests, avg_reqtime = @db.get_first_row(
+        'SELECT COUNT(1), AVG(`reqtime`) FROM `payloads`'
       )
       statuses = @db.execute(
         'SELECT `status`, COUNT(`status`) FROM `payloads` GROUP BY `status`'
