@@ -19,6 +19,7 @@ sequencer.add_track proxy
 workers = 12.times do |i|
   worker = Simtick::Instrument::Worker.new do |payload|
     { duration: 300, status: 200, body: 'OK' }
+    #{ duration: [10,20,170,1000].sample, status: 200, body: 'OK' }
   end
   sequencer.add_track worker
   proxy.add_worker worker
@@ -34,12 +35,14 @@ gen_opts = {
 }
 
 gen = Simtick::Instrument::Generator.new(gen_opts) do |t|
-  { uri: "/hello?t=#{t}" }
+  { uri: "/" }
 end
 
 sequencer.add_track gen
 
-sequencer.play
+unless ENV['SKIP_PLAY']
+  sequencer.play
+end
 
 require 'simtick/html_printer'
 
