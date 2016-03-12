@@ -6,6 +6,7 @@ module Simtick
     TABLE_COLUMNS = {
       payloads: %w[ticker status reqtime],
       proxy_statuses: %w[ticker name backlog_used backlog_free workers_used workers_free],
+      generator_statuses: %w[ticker name rpt],
     }
 
     def initialize
@@ -20,6 +21,10 @@ module Simtick
 
     def record_proxy_status(ticker:, name:, backlog_used:, backlog_free:, workers_used:, workers_free:)
       record_to_buffer :proxy_statuses, ticker, SQLite3::Database.quote(name), backlog_used, backlog_free, workers_used, workers_free
+    end
+
+    def record_generator_status(ticker:, name:, rpt:)
+      record_to_buffer :generator_statuses, SQLite3::Database.quote(name), ticker, rpt
     end
 
     def record_to_buffer(table, *row)
@@ -89,6 +94,15 @@ CREATE TABLE `proxy_statuses` (
 `workers_free` INTEGER NOT NULL
 );
 CREATE INDEX `idx_proxy_statuses1` ON `proxy_statuses` (`ticker`);
+
+DROP TABLE IF EXISTS `generator_statuses`;
+CREATE TABLE `generator_statuses` (
+`id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`ticker` INTEGER NOT NULL,
+`name` VARCHAR(32) NOT NULL,
+`rpt` FLOAT NOT NULL
+);
+CREATE INDEX `idx_generator_statuses1` ON `generator_statuses` (`ticker`);
       SQL
     end
   end

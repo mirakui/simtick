@@ -9,7 +9,7 @@ require 'simtick/instrument/generator'
 
 sequencer = Simtick::Sequencer.new
 
-proxy = Simtick::Instrument::Proxy.new name: 'proxy1', backlog: 1000, timeout: 20_000
+proxy = Simtick::Instrument::Proxy.new backlog: 1000, timeout: 20_000
 sequencer.add_track proxy
 
 workers = 1.times do |i|

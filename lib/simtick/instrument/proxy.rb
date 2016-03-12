@@ -9,7 +9,7 @@ module Simtick
         @backlog = []
         @timeoutable_tasks = []
         @timeout = timeout
-        @name = name || to_s
+        @name = name || "proxy-#{object_id}"
       end
 
       def add_worker(worker)

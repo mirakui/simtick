@@ -8,7 +8,7 @@ module Simtick
     class Generator < Base
       DDA_RESOLUTION = 1000
 
-      def initialize(out:, req_per_tick:, attack_time:, sustain_time:0, release_time:0 , &block)
+      def initialize(name:nil, out:, req_per_tick:, attack_time:, sustain_time:0, release_time:0 , &block)
         @out = out
         @req_per_tick = req_per_tick
         @envelope = Envelope.new(
@@ -17,6 +17,7 @@ module Simtick
         )
         @dda_fiber = dda_fiber
         @payload_proc = block || lambda {|t| { uri: '/' } }
+        @name = name || "generator-#{object_id}"
       end
 
       def on_tick(ticker)
@@ -24,6 +25,11 @@ module Simtick
         if n && n > 0
           n.times { generate }
         end
+        sequencer.result.record_generator_status(
+          ticker: ticker,
+          name: @name,
+          rpt: current_level,
+        )
       end
 
       def generate
