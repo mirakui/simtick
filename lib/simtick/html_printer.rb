@@ -7,6 +7,16 @@ module Simtick
     end
 
     def print_device(dev)
+      rpts = sql_to_data <<-SQL
+SELECT
+  CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
+  name,
+  AVG(`rpt`)
+FROM `generator_statuses`
+GROUP BY t, name
+ORDER BY t
+      SQL
+
       reqtimes = sql_to_data <<-SQL
 SELECT
   CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
@@ -27,20 +37,15 @@ GROUP BY t, status
 ORDER BY t
       SQL
 
-      rpts = sql_to_data <<-SQL
-SELECT
-  CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
-  name,
-  AVG(`rpt`)
-FROM `generator_statuses`
-GROUP BY t, name
-ORDER BY t
-      SQL
+      proxies = get_proxy_data
 
       print_html(dev) do
+        print_graph dev, data: rpts, title: 'Requests per Tick'
         print_graph dev, data: reqtimes, title: 'Average Request Time'
         print_graph dev, data: statuses, title: 'Statuses'
-        print_graph dev, data: rpts, title: 'Requests per Tick'
+        proxies.each do |name, proxy|
+          print_graph dev, data: proxy, title: "Proxy Status: #{name}"
+        end
       end
     end
 
@@ -53,6 +58,31 @@ ORDER BY t
         data[series][t] = value
       end
       data
+    end
+
+    def get_proxy_data
+      proxies = {}
+      sql = <<-SQL
+SELECT
+  CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
+  `name`,
+  AVG(`backlog_used`) AS bu,
+  AVG(`backlog_free`) AS bf,
+  AVG(`workers_used`) AS wu,
+  AVG(`workers_free`) AS wf
+FROM `proxy_statuses`
+GROUP BY t, name
+ORDER BY t
+      SQL
+      @result.execute(sql) do |row|
+        t, name, bu, bf, wu, wf = row
+        proxies[name] ||= Hash.new {|h,k| h[k] = {} }
+        proxies[name]['backlog used'][t] = bu
+        proxies[name]['backlog free'][t] = bf
+        proxies[name]['workers used'][t] = wu
+        proxies[name]['workers free'][t] = wf
+      end
+      proxies
     end
 
     def print_html(dev, &block)
