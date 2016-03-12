@@ -14,7 +14,7 @@ module Simtick
         @velocity
       else
         t = ticker - @attack_time - @sustain_time
-        @release_time > 0 ? [0.0, @velocity * (1.0 - t / @release_time)].min : 0.0
+        @release_time > 0 ? [0.0, @velocity * (1.0 - t / @release_time)].max : 0.0
       end
     end
 
