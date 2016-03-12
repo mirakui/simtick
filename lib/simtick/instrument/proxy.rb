@@ -3,9 +3,7 @@ require 'simtick/instrument'
 module Simtick
   module Instrument
     class Proxy < Base
-      attr_reader :timeout
-
-      def initialize(backlog: 0, timeout: nil)
+      def initialize(backlog: 0, timeout: 60_000)
         @workers = []
         @backlog_max = backlog
         @backlog = []
