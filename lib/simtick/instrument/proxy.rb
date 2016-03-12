@@ -3,6 +3,8 @@ require 'simtick/instrument'
 module Simtick
   module Instrument
     class Proxy < Base
+      attr_reader :timeout
+
       def initialize(backlog: 0, timeout: nil)
         @workers = []
         @backlog_max = backlog
@@ -86,6 +88,10 @@ module Simtick
           end
         end
         nil # no workers available
+      end
+
+      def busy?
+        @backlog.length > 0 || !!@workers.find(:busy?)
       end
     end
   end

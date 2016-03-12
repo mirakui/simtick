@@ -1,16 +1,21 @@
 require 'simtick'
 require 'simtick/payload'
 require 'simtick/instrument'
+require 'simtick/envelope'
 
 module Simtick
   module Instrument
     class Generator < Base
       DDA_RESOLUTION = 1000
 
-      def initialize(out:, req_per_tick:, &block)
+      def initialize(out:, req_per_tick:, attack_time:, sustain_time:0, release_time:0 , &block)
         @out = out
         @req_per_tick = req_per_tick
-        @dda_fiber = dda @req_per_tick
+        @envelope = Envelope.new(
+          velocity: req_per_tick, attack_time: attack_time,
+          sustain_time: sustain_time, release_time: release_time
+        )
+        @dda_fiber = dda_fiber
         @payload_proc = block || lambda {|t| { uri: '/' } }
       end
 
@@ -44,15 +49,24 @@ module Simtick
         @out.request payload, &callback
       end
 
+      def current_level
+        @envelope.level sequencer.ticker
+      end
+
+      def finished?
+        @envelope.finished? sequencer.ticker
+      end
+
       # Bresenham's line algorithm
-      def dda(rpt)
+      def dda_fiber
         Fiber.new do
           dx = DDA_RESOLUTION
-          dy = rpt * DDA_RESOLUTION
+          dy = current_level * DDA_RESOLUTION
 
           ycount = 0
           err = dx - dy
           loop do
+            dy = current_level * DDA_RESOLUTION
             e2 = err * 2
             if e2 > -dy
               err -= dy

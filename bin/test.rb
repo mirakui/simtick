@@ -9,7 +9,7 @@ require 'simtick/instrument/generator'
 
 sequencer = Simtick::Sequencer.new
 
-proxy = Simtick::Instrument::Proxy.new backlog: 1000, timeout: 205
+proxy = Simtick::Instrument::Proxy.new backlog: 1000, timeout: 20_000
 sequencer.add_track proxy
 
 workers = 1.times do |i|
@@ -20,13 +20,21 @@ workers = 1.times do |i|
   proxy.add_worker worker
 end
 
-gen = Simtick::Instrument::Generator.new(out: proxy, req_per_tick: 0.02) do |t|
+gen_opts = {
+  out: proxy,
+  req_per_tick: 0.1,
+  attack_time: 10_000,
+  sustain_time: 5_000,
+  release_time: 5_000,
+}
+
+gen = Simtick::Instrument::Generator.new(gen_opts) do |t|
   { uri: "/hello?t=#{t}" }
 end
 
 sequencer.add_track gen
 
-sequencer.play max_ticker: 1000
+sequencer.play
 
 require 'simtick/text_summary_printer'
 printer = Simtick::TextSummaryPrinter.new(sequencer.result)

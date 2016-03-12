@@ -4,7 +4,7 @@ module Simtick
   class Sequencer
     attr_reader :ticker, :result
 
-    def initialize
+    def initialize(tick_per_sec: 1000)
       @tracks = []
       @ticker = 0
       @id_counters = Hash.new {|h, k| h[k] = 0 }
@@ -23,10 +23,18 @@ module Simtick
       @ticker += 1
     end
 
-    def play(max_ticker: 1000)
-      while @ticker <= max_ticker
+    def play(max_ticker: 60_000)
+      while @ticker <= max_ticker && !all_tracks_finished?
         tick!
       end
+    end
+
+    def all_tracks_finished?
+      @tracks.each do |t|
+        return false if t.respond_to?(:finished?) && !t.finished?
+        return false if t.respond_to?(:busy?) && t.busy?
+      end
+      true
     end
 
     def make_id(cls)
