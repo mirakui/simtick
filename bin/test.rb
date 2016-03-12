@@ -11,14 +11,14 @@ sequencer = Simtick::Sequencer.new
 
 proxy = Simtick::Instrument::Proxy.new(
   name: 'proxy-1',
-  backlog: 1_000,
+  backlog: 2048,
   timeout: 20_000,
 )
 sequencer.add_track proxy
 
-workers = 1.times do |i|
+workers = 12.times do |i|
   worker = Simtick::Instrument::Worker.new do |payload|
-    { duration: 100, status: 200, body: 'OK' }
+    { duration: 300, status: 200, body: 'OK' }
   end
   sequencer.add_track worker
   proxy.add_worker worker
@@ -27,10 +27,10 @@ end
 gen_opts = {
   out: proxy,
   name: 'gen-1',
-  req_per_tick: 0.1,
-  attack_time: 10_000,
-  sustain_time: 5_000,
-  release_time: 5_000,
+  req_per_tick: 100.0 / 1000.0,
+  attack_time: 20_000,
+  sustain_time: 0,
+  release_time: 0,
 }
 
 gen = Simtick::Instrument::Generator.new(gen_opts) do |t|
@@ -41,12 +41,9 @@ sequencer.add_track gen
 
 sequencer.play
 
-require 'simtick/text_summary_printer'
 require 'simtick/html_printer'
-printer = Simtick::TextSummaryPrinter.new(sequencer.result)
-printer.print(STDOUT)
 
-printer = Simtick::HtmlPrinter.new(sequencer.result)
+printer = Simtick::HtmlPrinter.new(sequencer.result, ticks_per_sec: 1000)
 out_path = 'tmp/out.html'
 printer.print out_path
 system 'open', out_path
