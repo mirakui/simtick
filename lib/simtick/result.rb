@@ -19,7 +19,7 @@ module Simtick
     end
 
     def record_proxy_status(ticker:, name:, backlog_used:, backlog_free:, workers_used:, workers_free:)
-      record_to_buffer :proxy_statuses, ticker, name, backlog_used, backlog_free, workers_used, workers_free
+      record_to_buffer :proxy_statuses, ticker, SQLite3::Database.quote(name), backlog_used, backlog_free, workers_used, workers_free
     end
 
     def record_to_buffer(table, *row)
