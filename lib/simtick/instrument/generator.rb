@@ -40,7 +40,7 @@ module Simtick
             reqtime: t,
             body: payload.body,
           )
-          sequencer.result.record(
+          sequencer.result.record_payload(
             ticker: t_end,
             status: payload.status,
             reqtime: t,

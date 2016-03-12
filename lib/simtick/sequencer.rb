@@ -27,6 +27,7 @@ module Simtick
       while @ticker <= max_ticker && !all_tracks_finished?
         tick!
       end
+      @result.flush_all
     end
 
     def all_tracks_finished?

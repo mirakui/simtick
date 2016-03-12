@@ -3,12 +3,13 @@ require 'simtick/instrument'
 module Simtick
   module Instrument
     class Proxy < Base
-      def initialize(backlog: 0, timeout: 60_000)
+      def initialize(name: nil, backlog: 0, timeout: 60_000)
         @workers = []
         @backlog_max = backlog
         @backlog = []
         @timeoutable_tasks = []
         @timeout = timeout
+        @name = name || to_s
       end
 
       def add_worker(worker)
@@ -24,6 +25,7 @@ module Simtick
             task[:on_finish].call resp
           end
         end
+        record_proxy_status
       end
 
       def check_timeoutable_tasks(ticker)
@@ -90,6 +92,18 @@ module Simtick
 
       def busy?
         @backlog.length > 0 || !!@workers.find(:busy?)
+      end
+
+      def record_proxy_status
+        workers_used = @workers.count(&:busy?)
+        sequencer.result.record_proxy_status(
+          ticker: sequencer.ticker,
+          name: @name,
+          backlog_used: @backlog.length,
+          backlog_free: @backlog_max - @backlog.length,
+          workers_used: workers_used,
+          workers_free: @workers.length - workers_used,
+        )
       end
     end
   end
