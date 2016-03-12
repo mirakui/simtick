@@ -12,7 +12,6 @@ module Simtick
     def initialize
       @db = SQLite3::Database.new '/tmp/simtick.db'
       @buffers = Hash.new {|h,k| h[k] = [] }
-      init_db
     end
 
     def record_payload(ticker:, status:, reqtime:)
@@ -24,7 +23,7 @@ module Simtick
     end
 
     def record_generator_status(ticker:, name:, rpt:)
-      record_to_buffer :generator_statuses, SQLite3::Database.quote(name), ticker, rpt
+      record_to_buffer :generator_statuses, ticker, SQLite3::Database.quote(name),  rpt
     end
 
     def record_to_buffer(table, *row)
@@ -44,6 +43,10 @@ module Simtick
 
     def flush_all
       TABLE_COLUMNS.each_key {|table| flush table }
+    end
+
+    def execute(sql, *args, &block)
+      @db.execute sql, *args, &block
     end
 
     def instert_sql(table, rows)

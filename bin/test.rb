@@ -37,5 +37,11 @@ sequencer.add_track gen
 sequencer.play
 
 require 'simtick/text_summary_printer'
+require 'simtick/html_printer'
 printer = Simtick::TextSummaryPrinter.new(sequencer.result)
 printer.print(STDOUT)
+
+printer = Simtick::HtmlPrinter.new(sequencer.result)
+out_path = 'tmp/out.html'
+printer.print out_path
+system 'open', out_path

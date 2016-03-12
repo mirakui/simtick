@@ -6,7 +6,7 @@ module Simtick
       @result = result
     end
 
-    def print(dev)
+    def print_device(dev)
       dev.puts @result.summarize
     end
   end

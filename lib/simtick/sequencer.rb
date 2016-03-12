@@ -24,6 +24,7 @@ module Simtick
     end
 
     def play(max_ticker: 60_000)
+      @result.init_db
       while @ticker <= max_ticker && !all_tracks_finished?
         tick!
       end
