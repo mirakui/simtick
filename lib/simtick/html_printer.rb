@@ -2,16 +2,17 @@ require 'simtick/base_printer'
 
 module Simtick
   class HtmlPrinter < BasePrinter
-    def initialize(result)
+    def initialize(result, ticks_per_sec: 1000)
       @result = result
+      @ticks_per_sec = ticks_per_sec.to_i
     end
 
     def print_device(dev)
       rpts = sql_to_data <<-SQL
 SELECT
-  CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
+  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
   name,
-  AVG(`rpt`)
+  AVG(`rpt`) * #{@ticks_per_sec}
 FROM `generator_statuses`
 GROUP BY t, name
 ORDER BY t
@@ -19,9 +20,9 @@ ORDER BY t
 
       reqtimes = sql_to_data <<-SQL
 SELECT
-  CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
+  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
   'reqtime',
-  AVG(`reqtime`) AS reqtime
+  AVG(`reqtime`) / #{@ticks_per_sec} AS reqtime
 FROM `payloads`
 GROUP BY t
 ORDER BY t
@@ -29,7 +30,7 @@ ORDER BY t
 
       statuses = sql_to_data <<-SQL
 SELECT
-  CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
+  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
   `status`,
   COUNT(1) AS cnt
 FROM `payloads`
@@ -40,9 +41,9 @@ ORDER BY t
       proxies = get_proxy_data
 
       print_html(dev) do
-        print_graph dev, data: rpts, title: 'Requests per Tick'
+        print_graph dev, data: rpts, title: 'Requests per Second'
         print_graph dev, data: reqtimes, title: 'Average Request Time'
-        print_graph dev, data: statuses, title: 'Statuses'
+        print_graph dev, data: statuses, title: 'Status Codes per Second'
         proxies.each do |name, proxy|
           print_graph dev, data: proxy, title: "Proxy Status: #{name}"
         end
@@ -64,7 +65,7 @@ ORDER BY t
       proxies = {}
       sql = <<-SQL
 SELECT
-  CAST(`ticker`/1000 AS INTEGER) * 1000 AS t,
+  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
   `name`,
   AVG(`backlog_used`) AS bu,
   AVG(`backlog_free`) AS bf,
