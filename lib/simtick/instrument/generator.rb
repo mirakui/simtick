@@ -39,16 +39,16 @@ module Simtick
           t_end = sequencer.ticker
           t =  t_end - t_start
           Simtick.logger.record(
-            ticker: t_end,
-            uri: payload.uri,
-            status: payload.status,
-            reqid: payload.request_id,
+            ticker: t_start,
+            uri: resp.uri,
+            status: resp.status,
+            reqid: resp.request_id,
             reqtime: t,
-            body: payload.body,
+            body: resp.body,
           )
           sequencer.result.record_payload(
             ticker: t_end,
-            status: payload.status,
+            status: resp.status,
             reqtime: t,
           )
         }

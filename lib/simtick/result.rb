@@ -2,6 +2,8 @@ require 'sqlite3'
 
 module Simtick
   class Result
+    attr_reader :db
+
     FLUSH_INTERVAL = 1000
     TABLE_COLUMNS = {
       payloads: %w[ticker status reqtime],

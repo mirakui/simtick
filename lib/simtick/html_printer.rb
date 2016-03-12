@@ -22,7 +22,7 @@ ORDER BY t
 SELECT
   CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
   'reqtime',
-  AVG(`reqtime`) / #{@ticks_per_sec} AS reqtime
+  AVG(`reqtime`) / #{@ticks_per_sec} AS reqtime_avg
 FROM `payloads`
 GROUP BY t
 ORDER BY t
@@ -38,11 +38,22 @@ GROUP BY t, status
 ORDER BY t
       SQL
 
-      proxies = get_proxy_data
+      proxies = sql_to_data2 <<-SQL
+SELECT
+  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
+  `name`,
+  MAX(`workers_used`) AS workers_used,
+  MIN(`workers_free`) AS workers_free,
+  MAX(`backlog_used`) AS backlog_used,
+  MIN(`backlog_free`) AS backlog_free
+FROM `proxy_statuses`
+GROUP BY t, name
+ORDER BY t
+      SQL
 
       print_html(dev) do
         print_graph dev, data: rpts, title: 'Requests per Second'
-        print_graph dev, data: reqtimes, title: 'Average Request Time'
+        print_graph dev, data: reqtimes, title: 'Average Request Time', type: 'scatter'
         print_graph dev, data: statuses, title: 'Status Codes per Second'
         proxies.each do |name, proxy|
           print_graph dev, data: proxy, title: "Proxy Status: #{name}"
@@ -61,29 +72,22 @@ ORDER BY t
       data
     end
 
-    def get_proxy_data
-      proxies = {}
-      sql = <<-SQL
-SELECT
-  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
-  `name`,
-  AVG(`backlog_used`) AS bu,
-  AVG(`backlog_free`) AS bf,
-  AVG(`workers_used`) AS wu,
-  AVG(`workers_free`) AS wf
-FROM `proxy_statuses`
-GROUP BY t, name
-ORDER BY t
-      SQL
+    def sql_to_data2(sql)
+      rah = @result.db.results_as_hash
+      @result.db.results_as_hash = true
+
+      data = {}
       @result.execute(sql) do |row|
-        t, name, bu, bf, wu, wf = row
-        proxies[name] ||= Hash.new {|h,k| h[k] = {} }
-        proxies[name]['backlog used'][t] = bu
-        proxies[name]['backlog free'][t] = bf
-        proxies[name]['workers used'][t] = wu
-        proxies[name]['workers free'][t] = wf
+        t, series = row.values[0,2]
+        data[series] ||= Hash.new {|h,k| h[k] = {} }
+        keys = row.keys[2,(row.length/2-2)]
+        keys.each do |k|
+          data[series][k][t] = row[k]
+        end
       end
-      proxies
+
+      @result.db.results_as_hash = rah
+      data
     end
 
     def print_html(dev, &block)
@@ -105,7 +109,7 @@ ORDER BY t
       HTML
     end
 
-    def print_graph(dev, data:, title:, width:'1000px', height:'400px')
+    def print_graph(dev, data:, title:, type:'bar', errors:nil, width:'1000px', height:'400px')
       cls = "div#{data.object_id}"
 
       dev.puts <<-HTML
@@ -122,7 +126,7 @@ ORDER BY t
 var #{trace_var} = {
   x: [#{trace.keys.join(',')}],
   y: [#{trace.values.join(',')}],
-  type: 'scatter',
+  type: '#{type}',
   mode: 'lines+markers',
   name: '#{series}'
 };
@@ -132,6 +136,7 @@ var #{trace_var} = {
       dev.puts <<-HTML
 var data = [#{trace_vars.join(',')}];
 var layout = {
+#{type == 'bar' ? "barmode: 'stack'," : ''}
   title: '#{title}'
 };
 Plotly.newPlot('#{cls}', data, layout);
