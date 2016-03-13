@@ -54,7 +54,7 @@ ORDER BY t
 
       ticker_max = get_ticker_max
       opts = {
-        xaxis_range: [0, (ticker_max / @ticks_per_sec).to_i]
+        xaxis_range: [0, (ticker_max / @ticks_per_sec).to_i + 1]
       }
 
       print_html(dev) do
