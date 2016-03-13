@@ -1,4 +1,5 @@
 require 'simtick/base_printer'
+require 'json'
 
 module Simtick
   class HtmlPrinter < BasePrinter
@@ -51,12 +52,17 @@ GROUP BY t, name
 ORDER BY t
       SQL
 
+      ticker_max = get_ticker_max
+      opts = {
+        xaxis_range: [0, (ticker_max / @ticks_per_sec).to_i]
+      }
+
       print_html(dev) do
-        print_graph dev, data: rpts, title: 'Requests per Second'
-        print_graph dev, data: statuses, title: 'Status Codes per Second'
-        print_graph dev, data: reqtimes, title: 'Average Request Time', type: 'scatter'
+        print_graph dev, opts.merge(data: rpts, title: 'Requests per Second')
+        print_graph dev, opts.merge(data: statuses, title: 'Status Codes per Second')
+        print_graph dev, opts.merge(data: reqtimes, title: 'Average Request Time', type: 'scatter')
         proxies.each do |name, proxy|
-          print_graph dev, data: proxy, title: "Proxy Status: #{name}"
+          print_graph dev, opts.merge(data: proxy, title: "Proxy Status: #{name}")
         end
       end
     end
@@ -90,6 +96,13 @@ ORDER BY t
       data
     end
 
+    def get_ticker_max
+      tables = %w[proxy_statuses generator_statuses payloads]
+      tables.map do |t|
+        @result.db.get_first_value("SELECT MAX(`ticker`) FROM `#{t}`")
+      end.max
+    end
+
     def print_html(dev, &block)
       dev.puts <<-HTML
 <!DOCTYPE html>
@@ -109,7 +122,7 @@ ORDER BY t
       HTML
     end
 
-    def print_graph(dev, data:, title:, type:'bar', errors:nil, width:'1000px', height:'400px')
+    def print_graph(dev, data:, title:, type:'bar', xaxis_range:nil, width:'1000px', height:'400px')
       cls = "div#{data.object_id}"
 
       dev.puts <<-HTML
@@ -117,31 +130,39 @@ ORDER BY t
 <script type="text/javascript">
       HTML
 
-      trace_vars = []
+      trace_var_names = []
       data.each do |series, trace|
-        trace_var = "trace#{trace.object_id}"
-        trace_vars << trace_var
+        trace_var_name = "trace#{trace.object_id}"
+        trace_var_names << trace_var_name
+        tv = {
+          'x' => trace.keys,
+          'y' => trace.values,
+          'type' => type,
+          'name' => series,
+        }
 
-        dev.puts <<-HTML
-var #{trace_var} = {
-  x: [#{trace.keys.join(',')}],
-  y: [#{trace.values.join(',')}],
-  type: '#{type}',
-  mode: 'lines+markers',
-  name: '#{series}'
-};
-        HTML
+        tv['mode'] = 'line+markers' if type == 'scatter'
+
+        print_var dev, trace_var_name, tv
       end
 
+      layout = {
+        'title' => title,
+        'showlegend' => true,
+      }
+      layout['barmode'] = 'stack' if type == 'bar'
+      layout['xaxis'] = { range: xaxis_range } if xaxis_range
+      print_var dev, 'layout', layout
+
       dev.puts <<-HTML
-var data = [#{trace_vars.join(',')}];
-var layout = {
-#{type == 'bar' ? "barmode: 'stack'," : ''}
-  title: '#{title}'
-};
+var data = [#{trace_var_names.join(',')}]
 Plotly.newPlot('#{cls}', data, layout);
 </script>
       HTML
+    end
+
+    def print_var(dev, name, value)
+      dev.puts "var #{name} = #{value.to_json}"
     end
   end
 end
