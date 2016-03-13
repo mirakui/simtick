@@ -91,7 +91,7 @@ module Simtick
       end
 
       def busy?
-        @backlog.length > 0 || !!@workers.find(:busy?)
+        @backlog.length > 0 || !!@workers.find(&:busy?)
       end
 
       def record_proxy_status
