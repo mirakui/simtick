@@ -141,7 +141,7 @@ ORDER BY t
           'name' => series,
         }
 
-        tv['mode'] = 'line+markers' if type == 'scatter'
+        tv['mode'] = 'lines+markers' if type == 'scatter'
 
         print_var dev, trace_var_name, tv
       end
