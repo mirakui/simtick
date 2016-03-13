@@ -18,16 +18,6 @@ GROUP BY t, name
 ORDER BY t
       SQL
 
-      reqtimes = sql_to_data <<-SQL
-SELECT
-  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
-  'reqtime',
-  AVG(`reqtime`) / #{@ticks_per_sec} AS reqtime_avg
-FROM `payloads`
-GROUP BY t
-ORDER BY t
-      SQL
-
       statuses = sql_to_data <<-SQL
 SELECT
   CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
@@ -35,6 +25,16 @@ SELECT
   COUNT(1) AS cnt
 FROM `payloads`
 GROUP BY t, status
+ORDER BY t
+      SQL
+
+      reqtimes = sql_to_data <<-SQL
+SELECT
+  CAST(`ticker`/#{@ticks_per_sec} AS INTEGER) AS t,
+  'reqtime',
+  AVG(`reqtime`) / #{@ticks_per_sec} AS reqtime_avg
+FROM `payloads`
+GROUP BY t
 ORDER BY t
       SQL
 
@@ -53,8 +53,8 @@ ORDER BY t
 
       print_html(dev) do
         print_graph dev, data: rpts, title: 'Requests per Second'
-        print_graph dev, data: reqtimes, title: 'Average Request Time', type: 'scatter'
         print_graph dev, data: statuses, title: 'Status Codes per Second'
+        print_graph dev, data: reqtimes, title: 'Average Request Time', type: 'scatter'
         proxies.each do |name, proxy|
           print_graph dev, data: proxy, title: "Proxy Status: #{name}"
         end
